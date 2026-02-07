@@ -36,20 +36,12 @@ const upload = multer({
 });
 
 // Upload logo (admin only)
-router.post('/logo', authMiddleware, adminOnly, (req: AuthRequest, res: Response) => {
-  upload.single('logo')(req, res, (err) => {
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        res.status(400).json({ error: 'Arquivo muito grande. Máximo: 2MB.' });
-        return;
-      }
-      res.status(400).json({ error: err.message });
-      return;
-    }
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
+router.post(
+  '/logo',
+  authMiddleware,
+  adminOnly,
+  upload.single('logo'),
+  (req: AuthRequest, res: Response) => {
     if (!req.file) {
       res.status(400).json({ error: 'Nenhum arquivo enviado.' });
       return;
@@ -72,8 +64,8 @@ router.post('/logo', authMiddleware, adminOnly, (req: AuthRequest, res: Response
       message: 'Logo atualizado com sucesso.',
       filename: req.file.filename,
     });
-  });
-});
+  }
+);
 
 // Get current logo info (public)
 router.get('/logo', (_req: Request, res: Response) => {
