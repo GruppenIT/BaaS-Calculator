@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = '/baas/api';
 
 function getToken(): string | null {
   return localStorage.getItem('token');
@@ -23,7 +23,7 @@ async function request(path: string, options: RequestInit = {}): Promise<any> {
   if (response.status === 401) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    window.location.href = '/baas/login';
     throw new Error('Sessão expirada');
   }
 
