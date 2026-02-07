@@ -5,6 +5,7 @@ import { initializeDatabase } from './db/database';
 import authRoutes from './routes/auth';
 import dadosRoutes from './routes/dados';
 import scenarioRoutes from './routes/scenarios';
+import settingsRoutes from './routes/settings';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -20,6 +21,11 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/dados', dadosRoutes);
 app.use('/api/scenarios', scenarioRoutes);
+app.use('/api/settings', settingsRoutes);
+
+// Serve uploaded files
+const uploadsDir = path.join(__dirname, '..', 'data', 'uploads');
+app.use('/api/uploads', express.static(uploadsDir));
 
 // Serve static frontend in production
 const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');

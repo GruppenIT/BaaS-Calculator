@@ -90,6 +90,25 @@ export const api = {
   getTaxConfig: () => request('/dados/tax-config'),
   updateTaxConfig: (id: number, data: any) => request(`/dados/tax-config/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
+  // Settings
+  getLogoInfo: () => request('/settings/logo'),
+  uploadLogo: (file: File) => {
+    const formData = new FormData();
+    formData.append('logo', file);
+    const token = getToken();
+    return fetch(`${API_BASE}/settings/logo`, {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData,
+    }).then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao enviar logo');
+      return data;
+    });
+  },
+  deleteLogo: () => request('/settings/logo', { method: 'DELETE' }),
+  getLogoUrl: (filename: string) => `${API_BASE}/uploads/${filename}`,
+
   // Scenarios
   getScenarios: () => request('/scenarios'),
   getScenario: (id: number) => request(`/scenarios/${id}`),

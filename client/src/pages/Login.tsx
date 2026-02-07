@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../services/api';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 export default function Login() {
@@ -8,8 +9,17 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [logoSrc, setLogoSrc] = useState(`${import.meta.env.BASE_URL}logo.png`);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.getLogoInfo().then((info) => {
+      if (info.hasCustomLogo && info.filename) {
+        setLogoSrc(api.getLogoUrl(info.filename));
+      }
+    }).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +41,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img
-            src={`${import.meta.env.BASE_URL}logo.png`}
+            src={logoSrc}
             alt="Logo"
             className="h-16 mx-auto mb-4 object-contain"
           />

@@ -1,9 +1,20 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../services/api';
 
 export default function Layout() {
   const { user, isAdmin, logout } = useAuth();
   const location = useLocation();
+  const [logoSrc, setLogoSrc] = useState(`${import.meta.env.BASE_URL}logo.png`);
+
+  useEffect(() => {
+    api.getLogoInfo().then((info) => {
+      if (info.hasCustomLogo && info.filename) {
+        setLogoSrc(api.getLogoUrl(info.filename));
+      }
+    }).catch(() => {});
+  }, []);
 
   const navItems = [
     { path: '/', label: 'Dashboard', visible: true },
@@ -22,7 +33,7 @@ export default function Layout() {
             <div className="flex items-center gap-8">
               <Link to="/" className="flex items-center gap-3">
                 <img
-                  src={`${import.meta.env.BASE_URL}logo.png`}
+                  src={logoSrc}
                   alt="Logo"
                   className="h-8 object-contain"
                 />

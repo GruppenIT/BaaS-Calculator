@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 
-type TabKey = 'products' | 'intervals' | 'management' | 'storageOnprem' | 'storageCloud' | 'margins' | 'roi' | 'multipliers' | 'tax';
+type TabKey = 'products' | 'intervals' | 'management' | 'storageOnprem' | 'storageCloud' | 'margins' | 'roi' | 'multipliers' | 'tax' | 'logo';
 
 interface Tab {
   key: TabKey;
@@ -18,6 +18,7 @@ const tabs: Tab[] = [
   { key: 'roi', label: 'ROI Servidor' },
   { key: 'multipliers', label: 'Multiplicadores' },
   { key: 'tax', label: 'Impostos' },
+  { key: 'logo', label: 'Logo' },
 ];
 
 export default function Dados() {
@@ -28,6 +29,48 @@ export default function Dados() {
   const [adding, setAdding] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [saving, setSaving] = useState(false);
+  const [logoInfo, setLogoInfo] = useState<{ hasCustomLogo: boolean; filename: string | null }>({ hasCustomLogo: false, filename: null });
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadLogoInfo = async () => {
+    try {
+      const info = await api.getLogoInfo();
+      setLogoInfo(info);
+      setLogoPreview(null);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLogoPreview(URL.createObjectURL(file));
+    setLogoUploading(true);
+    try {
+      await api.uploadLogo(file);
+      await loadLogoInfo();
+    } catch (err: any) {
+      alert(err.message);
+      setLogoPreview(null);
+    } finally {
+      setLogoUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleLogoDelete = async () => {
+    if (!confirm('Tem certeza que deseja remover o logo personalizado?')) return;
+    try {
+      await api.deleteLogo();
+      await loadLogoInfo();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -39,7 +82,7 @@ export default function Dados() {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); loadLogoInfo(); }, []);
 
   const startEdit = (item: any) => {
     setEditing(item.id);
@@ -399,6 +442,69 @@ export default function Dados() {
           undefined,
           false
         );
+
+      case 'logo': {
+        const currentLogoSrc = logoPreview
+          || (logoInfo.hasCustomLogo && logoInfo.filename
+            ? api.getLogoUrl(logoInfo.filename) + '?t=' + Date.now()
+            : `${import.meta.env.BASE_URL}logo.png`);
+
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="font-medium text-gray-900 mb-1">Logo atual</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Este logo é exibido na tela de login e na barra de navegação.
+              </p>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 flex items-center justify-center">
+                <img
+                  src={currentLogoSrc}
+                  alt="Logo atual"
+                  className="max-h-24 max-w-xs object-contain"
+                />
+              </div>
+              {logoInfo.hasCustomLogo && (
+                <p className="text-xs text-green-600 mt-2">Logo personalizado ativo</p>
+              )}
+              {!logoInfo.hasCustomLogo && (
+                <p className="text-xs text-gray-400 mt-2">Usando logo padrão</p>
+              )}
+            </div>
+
+            <div>
+              <h3 className="font-medium text-gray-900 mb-1">Enviar novo logo</h3>
+              <p className="text-sm text-gray-500 mb-3">
+                Formatos aceitos: PNG, JPG, SVG, WebP. Tamanho máximo: 2MB.
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".png,.jpg,.jpeg,.svg,.webp"
+                onChange={handleLogoUpload}
+                className="hidden"
+                id="logo-upload"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={logoUploading}
+                  className="btn-primary text-sm"
+                >
+                  {logoUploading ? 'Enviando...' : 'Selecionar arquivo'}
+                </button>
+                {logoInfo.hasCustomLogo && (
+                  <button
+                    onClick={handleLogoDelete}
+                    className="text-sm px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    Remover logo personalizado
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
 
       default:
         return null;
