@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Scenarios() {
+  const { user, isAdmin } = useAuth();
   const [scenarios, setScenarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -18,6 +20,8 @@ export default function Scenarios() {
   };
 
   useEffect(() => { loadScenarios(); }, []);
+
+  const canEdit = (scenario: any) => isAdmin || scenario.user_id === user?.id;
 
   const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -68,6 +72,7 @@ export default function Scenarios() {
                   <div className="flex gap-4 mt-1 text-sm text-gray-500">
                     {scenario.client_name && <span>Cliente: {scenario.client_name}</span>}
                     {scenario.seller_name && <span>Vendedor: {scenario.seller_name}</span>}
+                    {scenario.author_name && <span className="text-gray-400">por {scenario.author_name}</span>}
                   </div>
                   <div className="flex gap-4 mt-2 text-xs text-gray-400">
                     <span>Criado: {new Date(scenario.created_at).toLocaleDateString('pt-BR')}</span>
@@ -75,19 +80,23 @@ export default function Scenarios() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Link
-                    to={`/scenarios/${scenario.id}/edit`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    Editar
-                  </Link>
-                  <button
-                    onClick={(e) => handleDelete(scenario.id, e)}
-                    className="text-red-600 hover:text-red-800 text-sm font-medium"
-                  >
-                    Excluir
-                  </button>
+                  {canEdit(scenario) && (
+                    <>
+                      <Link
+                        to={`/scenarios/${scenario.id}/edit`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        Editar
+                      </Link>
+                      <button
+                        onClick={(e) => handleDelete(scenario.id, e)}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        Excluir
+                      </button>
+                    </>
+                  )}
                   <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

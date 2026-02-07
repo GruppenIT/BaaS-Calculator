@@ -2,14 +2,17 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Layout() {
-  const { user, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const location = useLocation();
 
   const navItems = [
-    { path: '/', label: 'Dashboard' },
-    { path: '/scenarios', label: 'Cenários' },
-    { path: '/dados', label: 'Cadastros' },
-  ];
+    { path: '/', label: 'Dashboard', visible: true },
+    { path: '/scenarios', label: 'Cenários', visible: true },
+    { path: '/dados', label: 'Cadastros', visible: isAdmin },
+    { path: '/users', label: 'Usuários', visible: isAdmin },
+  ].filter(item => item.visible);
+
+  const roleBadge = isAdmin ? 'Admin' : 'Vendedor';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,8 +42,15 @@ export default function Layout() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user?.name}</span>
+            <div className="flex items-center gap-3">
+              <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <span className="text-sm text-gray-600">{user?.name}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {roleBadge}
+                </span>
+              </Link>
               <button
                 onClick={logout}
                 className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
@@ -53,12 +63,12 @@ export default function Layout() {
       </nav>
 
       {/* Mobile nav */}
-      <div className="sm:hidden bg-white border-b border-gray-200 px-4 py-2 flex gap-2">
+      <div className="sm:hidden bg-white border-b border-gray-200 px-4 py-2 flex gap-2 overflow-x-auto">
         {navItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
               location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path))
                 ? 'bg-blue-50 text-blue-700'
                 : 'text-gray-600 hover:text-gray-900'

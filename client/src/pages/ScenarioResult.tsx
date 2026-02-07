@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -9,6 +10,7 @@ function formatCurrency(value: number): string {
 export default function ScenarioResult() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const [scenario, setScenario] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,9 +44,11 @@ export default function ScenarioResult() {
             <span>Data: {new Date(scenario.created_at).toLocaleDateString('pt-BR')}</span>
           </div>
         </div>
-        <Link to={`/scenarios/${id}/edit`} className="btn-primary">
-          Editar
-        </Link>
+        {(isAdmin || scenario.user_id === user?.id) && (
+          <Link to={`/scenarios/${id}/edit`} className="btn-primary">
+            Editar
+          </Link>
+        )}
       </div>
 
       {/* Risk and Info */}

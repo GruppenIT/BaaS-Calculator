@@ -23,6 +23,7 @@ export function initializeDatabase() {
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       name TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'vendedor',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 

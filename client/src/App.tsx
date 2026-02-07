@@ -8,6 +8,14 @@ import Dados from './pages/Dados';
 import Scenarios from './pages/Scenarios';
 import ScenarioForm from './pages/ScenarioForm';
 import ScenarioResult from './pages/ScenarioResult';
+import Users from './pages/Users';
+import Profile from './pages/Profile';
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin } = useAuth();
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
 
 function AppRoutes() {
   const { user } = useAuth();
@@ -17,7 +25,9 @@ function AppRoutes() {
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/dados" element={<Dados />} />
+        <Route path="/dados" element={<AdminRoute><Dados /></AdminRoute>} />
+        <Route path="/users" element={<AdminRoute><Users /></AdminRoute>} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/scenarios" element={<Scenarios />} />
         <Route path="/scenarios/new" element={<ScenarioForm />} />
         <Route path="/scenarios/:id" element={<ScenarioResult />} />

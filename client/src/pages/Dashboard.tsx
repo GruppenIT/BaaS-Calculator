@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [scenarios, setScenarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,19 +52,21 @@ export default function Dashboard() {
           </div>
         </Link>
 
-        <Link to="/dados" className="card hover:shadow-md transition-shadow group">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-              <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-              </svg>
+        {isAdmin && (
+          <Link to="/dados" className="card hover:shadow-md transition-shadow group">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Cadastros</h3>
+                <p className="text-sm text-gray-500">Dados de referência</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Cadastros</h3>
-              <p className="text-sm text-gray-500">Dados de referência</p>
-            </div>
-          </div>
-        </Link>
+          </Link>
+        )}
       </div>
 
       {/* Recent Scenarios */}
@@ -98,6 +100,7 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-500">
                     {scenario.client_name && `${scenario.client_name} - `}
                     {new Date(scenario.updated_at).toLocaleDateString('pt-BR')}
+                    {scenario.author_name && <span className="text-gray-400"> - por {scenario.author_name}</span>}
                   </p>
                 </div>
                 <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -196,13 +196,25 @@ db.prepare('INSERT INTO tax_config (name, rate) VALUES (?, ?)').run('Carga tribu
 console.log('  Inserted tax config');
 
 // ============================================================
+// Migration: add role column if missing (existing databases)
+// ============================================================
+const columns = db.prepare("PRAGMA table_info(users)").all() as any[];
+if (!columns.find((c: any) => c.name === 'role')) {
+  db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'vendedor'");
+  console.log('  Migrated: added role column to users');
+}
+
+// ============================================================
 // Default Admin User
 // ============================================================
 const existingUser = db.prepare('SELECT id FROM users WHERE username = ?').get('admin');
 if (!existingUser) {
   const hash = bcrypt.hashSync('admin123', 10);
-  db.prepare('INSERT INTO users (username, password_hash, name) VALUES (?, ?, ?)').run('admin', hash, 'Administrador');
+  db.prepare('INSERT INTO users (username, password_hash, name, role) VALUES (?, ?, ?, ?)').run('admin', hash, 'Administrador', 'admin');
   console.log('  Created default admin user (admin / admin123)');
+} else {
+  db.prepare("UPDATE users SET role = 'admin' WHERE username = 'admin'").run();
+  console.log('  Ensured admin user has admin role');
 }
 
 console.log('\nDatabase seeded successfully!');

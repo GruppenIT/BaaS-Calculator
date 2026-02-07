@@ -6,22 +6,25 @@ import { calculateScenario, ScenarioInput } from '../services/calculator';
 const router = Router();
 router.use(authMiddleware);
 
-// List all scenarios for the current user
+// List all scenarios (everyone can see all scenarios)
 router.get('/', (req: AuthRequest, res: Response) => {
   const scenarios = db.prepare(
-    'SELECT id, name, client_name, seller_name, created_at, updated_at FROM scenarios WHERE user_id = ? ORDER BY updated_at DESC'
-  ).all(req.userId);
+    `SELECT s.id, s.name, s.client_name, s.seller_name, s.user_id, s.created_at, s.updated_at, u.name as author_name
+     FROM scenarios s LEFT JOIN users u ON s.user_id = u.id
+     ORDER BY s.updated_at DESC`
+  ).all();
   res.json(scenarios);
 });
 
-// Get a single scenario
+// Get a single scenario (everyone can view any scenario)
 router.get('/:id', (req: AuthRequest, res: Response) => {
-  const scenario = db.prepare('SELECT * FROM scenarios WHERE id = ? AND user_id = ?').get(req.params.id, req.userId) as any;
+  const scenario = db.prepare(
+    `SELECT s.*, u.name as author_name FROM scenarios s LEFT JOIN users u ON s.user_id = u.id WHERE s.id = ?`
+  ).get(req.params.id) as any;
   if (!scenario) {
     res.status(404).json({ error: 'Cenário não encontrado' });
     return;
   }
-  // Parse results JSON
   if (scenario.results) {
     scenario.results = JSON.parse(scenario.results);
   }
@@ -88,11 +91,15 @@ router.post('/', (req: AuthRequest, res: Response) => {
   });
 });
 
-// Update a scenario
+// Update a scenario (own only for vendedor, any for admin)
 router.put('/:id', (req: AuthRequest, res: Response) => {
-  const existing = db.prepare('SELECT id FROM scenarios WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
+  const existing = db.prepare('SELECT id, user_id FROM scenarios WHERE id = ?').get(req.params.id) as any;
   if (!existing) {
     res.status(404).json({ error: 'Cenário não encontrado' });
+    return;
+  }
+  if (req.userRole !== 'admin' && existing.user_id !== req.userId) {
+    res.status(403).json({ error: 'Você só pode editar seus próprios cenários' });
     return;
   }
 
@@ -134,7 +141,7 @@ router.put('/:id', (req: AuthRequest, res: Response) => {
       veeam_points_level=?, veeam_edition=?, local_storage_tb=?, cloud_storage_tb=?,
       mailbox_count=?, server_acquisition_cost=?, has_dual_backup=?, dollar_rate=?, tax_rate=?,
       results=?, updated_at=CURRENT_TIMESTAMP
-    WHERE id=? AND user_id=?
+    WHERE id=?
   `).run(
     name || 'Novo Cenário', client_name || '', seller_name || '',
     opportunity_number || '', opportunity_name || '',
@@ -146,20 +153,24 @@ router.put('/:id', (req: AuthRequest, res: Response) => {
     server_acquisition_cost || 0, has_dual_backup ? 1 : 0,
     dollar_rate || 5.50, tax_rate || 0.18,
     JSON.stringify(results),
-    req.params.id, req.userId
+    req.params.id
   );
 
   res.json({ id: Number(req.params.id), results });
 });
 
-// Delete a scenario
+// Delete a scenario (own only for vendedor, any for admin)
 router.delete('/:id', (req: AuthRequest, res: Response) => {
-  const existing = db.prepare('SELECT id FROM scenarios WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
+  const existing = db.prepare('SELECT id, user_id FROM scenarios WHERE id = ?').get(req.params.id) as any;
   if (!existing) {
     res.status(404).json({ error: 'Cenário não encontrado' });
     return;
   }
-  db.prepare('DELETE FROM scenarios WHERE id = ? AND user_id = ?').run(req.params.id, req.userId);
+  if (req.userRole !== 'admin' && existing.user_id !== req.userId) {
+    res.status(403).json({ error: 'Você só pode excluir seus próprios cenários' });
+    return;
+  }
+  db.prepare('DELETE FROM scenarios WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 

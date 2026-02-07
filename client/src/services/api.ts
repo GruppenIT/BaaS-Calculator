@@ -40,9 +40,15 @@ export const api = {
   // Auth
   login: (username: string, password: string) =>
     request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
-  register: (username: string, password: string, name: string) =>
-    request('/auth/register', { method: 'POST', body: JSON.stringify({ username, password, name }) }),
   me: () => request('/auth/me'),
+  changePassword: (current_password: string, new_password: string) =>
+    request('/auth/change-password', { method: 'PUT', body: JSON.stringify({ current_password, new_password }) }),
+
+  // User Management (admin)
+  getUsers: () => request('/auth/users'),
+  createUser: (data: any) => request('/auth/users', { method: 'POST', body: JSON.stringify(data) }),
+  updateUser: (id: number, data: any) => request(`/auth/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteUser: (id: number) => request(`/auth/users/${id}`, { method: 'DELETE' }),
 
   // Dados
   getAllDados: () => request('/dados/all'),
