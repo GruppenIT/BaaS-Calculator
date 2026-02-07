@@ -30,9 +30,11 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">B</span>
-          </div>
+          <img
+            src={`${import.meta.env.BASE_URL}logo.png`}
+            alt="Logo"
+            className="h-16 mx-auto mb-4 object-contain"
+          />
           <h1 className="text-2xl font-bold text-gray-900">BaaS Calculator</h1>
           <p className="text-gray-500 mt-1">Precificação de Backup como Serviço</p>
         </div>
